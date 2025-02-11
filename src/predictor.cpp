@@ -68,7 +68,7 @@ uint8_t *choser_table;
 
 // Custom TAGE
 uint32_t num_tables = 1;
-uint32_t table_size = 2184;
+uint32_t table_size = 8736;
 uint32_t tag_bits = 10;
 int32_t pred_bits = 3; // TAKEN 0 1 2 NOTTAKEN -3 -2 -1
 uint32_t useful_bits = 2;
