@@ -52,7 +52,7 @@ uint64_t ghistory;
 
 // Tournament
 int pclocal_PHT_bits = 15;
-int pclocal_table_bits = 9;
+int pclocal_table_bits = 10;
 int global_table_bits = 16;
 int choser_table_bits = 15;
 
@@ -543,7 +543,8 @@ void init_predictor()
     init_tournament();
     break;
   case CUSTOM:
-    init_custom();
+    init_tournament();
+    //init_custom();
     break;
   default:
     break;
@@ -567,7 +568,8 @@ uint32_t make_prediction(uint32_t pc, uint32_t target, uint32_t direct)
   case TOURNAMENT:
     return torunament_predict(pc);
   case CUSTOM:
-    return custom_predict(pc);
+    return torunament_predict(pc);
+    //return custom_predict(pc);
   default:
     break;
   }
@@ -594,7 +596,8 @@ void train_predictor(uint32_t pc, uint32_t target, uint32_t outcome, uint32_t co
     case TOURNAMENT:
       return train_tournament(pc, outcome);
     case CUSTOM:
-      return train_custom(pc, outcome);
+    return train_tournament(pc, outcome);
+      //return train_custom(pc, outcome);
     default:
       break;
     }
