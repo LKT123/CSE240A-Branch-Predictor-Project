@@ -82,7 +82,7 @@ int8_t **tage_pred;    // prediction
 uint8_t **tage_useful; // u
 uint32_t tage_ghr = 0;
 
-uint32_t history_lengths[1] = {16};
+uint32_t history_lengths[1] = {24};
 
 
 
