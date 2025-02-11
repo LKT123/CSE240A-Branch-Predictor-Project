@@ -68,8 +68,8 @@ uint8_t *choser_table;
 
 // Custom TAGE
 uint32_t num_tables = 1;
-uint32_t table_size = 3891;
-uint32_t tag_bits = 10;
+uint32_t table_size = 4681;
+uint32_t tag_bits = 9;
 int32_t pred_bits = 3; // TAKEN 0 1 2 NOTTAKEN -3 -2 -1
 uint32_t useful_bits = 2;
 uint32_t history_bits = 32;
@@ -543,7 +543,7 @@ void init_predictor()
     init_tournament();
     break;
   case CUSTOM:
-    init_tournament();//init_custom();
+    init_custom();
     break;
   default:
     break;
@@ -567,7 +567,7 @@ uint32_t make_prediction(uint32_t pc, uint32_t target, uint32_t direct)
   case TOURNAMENT:
     return torunament_predict(pc);
   case CUSTOM:
-    return torunament_predict(pc);//return custom_predict(pc);
+    return custom_predict(pc);
   default:
     break;
   }
@@ -594,7 +594,7 @@ void train_predictor(uint32_t pc, uint32_t target, uint32_t outcome, uint32_t co
     case TOURNAMENT:
       return train_tournament(pc, outcome);
     case CUSTOM:
-      return train_tournament(pc, outcome);//return train_custom(pc, outcome);
+      return train_custom(pc, outcome);
     default:
       break;
     }
