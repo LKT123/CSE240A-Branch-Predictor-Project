@@ -409,8 +409,8 @@ void init_custom() {
     pc_base_predictor = WT;
     clear_counter = 1<<18;
     pclocal_PHT_bits = 15;
-    pclocal_table_bits = 8;
-    global_table_bits = 16;
+    pclocal_table_bits = 9;
+    global_table_bits = 17;
     choser_table_bits = 15;
     init_tournament();
 
