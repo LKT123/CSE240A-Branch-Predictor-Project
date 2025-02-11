@@ -408,10 +408,10 @@ void init_custom() {
     tage_ghr = 0;
     pc_base_predictor = WT;
     clear_counter = 1<<18;
-    pclocal_PHT_bits = 15;
-    pclocal_table_bits = 9;
+    pclocal_PHT_bits = 16;
+    pclocal_table_bits = 10;
     global_table_bits = 17;
-    choser_table_bits = 15;
+    choser_table_bits = 16;
     init_tournament();
 
 }
