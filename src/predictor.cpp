@@ -392,141 +392,82 @@ uint16_t hash_to_tag(uint32_t pc) {
 }
 
 void init_custom() {
-    tage_tags = (uint16_t **)malloc(num_tables * sizeof(uint16_t*));
-    tage_pred = (int8_t **)malloc(num_tables * sizeof(int8_t*));
-    tage_useful = (uint8_t **)malloc(num_tables * sizeof(uint8_t*));
-    for (int i = 0; i < num_tables; i++) {
-        tage_tags[i] = (uint16_t*)malloc(table_size *sizeof(uint16_t));
-        tage_pred[i] = (int8_t *)malloc(table_size * sizeof(int8_t));
-        tage_useful[i] = (uint8_t *)malloc(table_size * sizeof(uint8_t));
-        for (int j = 0; j < table_size; j++) {
-            tage_tags[i][j] = 0;
-            tage_pred[i][j] = 0;
-            tage_useful[i][j] = 0;
-        }
-    }
-    tage_ghr = 0;
-    pc_base_predictor = WT;
-    clear_counter = 1<<18;
-    pclocal_PHT_bits = 16;
-    pclocal_table_bits = 9;
-    global_table_bits = 17;
-    choser_table_bits = 16;
-    init_tournament();
+    {
+  int bht_entries = 1 << ghistoryBits;
+  bht_gshare = (uint8_t *)malloc(bht_entries * sizeof(uint8_t));
+  int i = 0;
+  for (i = 0; i < bht_entries; i++)
+  {
+    bht_gshare[i] = WN;
+  }
+  ghistory = 0;
+}
 
 }
 
 // Predict outcome
 uint8_t custom_predict(uint32_t pc) {
-    uint8_t prediction = torunament_predict(pc);
-    // switch (pc_base_predictor)
-    // {
-    // case WN:
-    //   prediction =  NOTTAKEN;
-    // case SN:
-    //   prediction =  NOTTAKEN;
-    // case WT:
-    //   prediction =  TAKEN;
-    // case ST:
-    //   prediction =  TAKEN;
-    // }
-    int most_significant_table = -1;
-    for (int i = 0; i < num_tables; i++){
-      uint32_t idx = hash_to_index(pc, tage_ghr, history_lengths[i]);
-      if (tage_tags[i][idx] == hash_to_tag(pc)) {
-          most_significant_table = i;
-        }
-    }
-    if (most_significant_table == -1){
-      return prediction;  // PC base prediction T0
-    }else{
-      uint32_t table_entry_index = hash_to_index(pc, tage_ghr, history_lengths[most_significant_table]);
-      int8_t prediction_counter = tage_pred[most_significant_table][table_entry_index];
-      if (prediction_counter >= 0){
-        return TAKEN;
-      }else{
-        return NOTTAKEN;
-      }
-    }
+{
+  // get lower ghistoryBits of pc
+  uint32_t bht_entries = 1 << ghistoryBits;
+  uint32_t pc_lower_bits = pc & (bht_entries - 1);
+  uint32_t ghistory_lower_bits = ghistory & (bht_entries - 1);
+  uint32_t index = pc_lower_bits ^ ghistory_lower_bits;
+  switch (bht_gshare[index])
+  {
+  case WN:
+    return NOTTAKEN;
+  case SN:
+    return NOTTAKEN;
+  case WT:
+    return TAKEN;
+  case ST:
+    return TAKEN;
+  default:
+    printf("Warning: Undefined state of entry in GSHARE BHT!\n");
+    return NOTTAKEN;
+  }
+}
 }
 
 void train_custom(uint32_t pc, uint8_t outcome) {
+{
+  // get lower ghistoryBits of pc
+  uint32_t bht_entries = 1 << ghistoryBits;
+  uint32_t pc_lower_bits = pc & (bht_entries - 1);
+  uint32_t ghistory_lower_bits = ghistory & (bht_entries - 1);
+  uint32_t index = pc_lower_bits ^ ghistory_lower_bits;
 
-    int most_significant_table = -1;
-    for (int i = 0; i < num_tables; i++){
-      uint32_t idx = hash_to_index(pc, tage_ghr, history_lengths[i]);
-      if (tage_tags[i][idx] == hash_to_tag(pc)) {
-          most_significant_table = i;
-        }
-    }
+  // Update state of entry in bht based on outcome
+  switch (bht_gshare[index])
+  {
+  case WN:
+    bht_gshare[index] = (outcome == TAKEN) ? WT : SN;
+    break;
+  case SN:
+    bht_gshare[index] = (outcome == TAKEN) ? WN : SN;
+    break;
+  case WT:
+    bht_gshare[index] = (outcome == TAKEN) ? ST : WN;
+    break;
+  case ST:
+    bht_gshare[index] = (outcome == TAKEN) ? ST : WT;
+    break;
+  default:
+    printf("Warning: Undefined state of entry in GSHARE BHT!\n");
+    break;
+  }
 
-    uint8_t prediction_outcome = custom_predict(pc);
-
-    if (most_significant_table != -1) {
-        uint32_t target_idx = hash_to_index(pc, tage_ghr, history_lengths[most_significant_table]);
-        if (outcome == TAKEN && tage_pred[most_significant_table][target_idx] < 3){
-          tage_pred[most_significant_table][target_idx] ++;
-        }else if (outcome == NOTTAKEN && tage_pred[most_significant_table][target_idx] > -4){
-          tage_pred[most_significant_table][target_idx] --;
-        }
-
-        if (outcome == prediction_outcome && tage_useful[most_significant_table][target_idx] < 3){
-          tage_useful[most_significant_table][target_idx] ++;
-        }else if (outcome != prediction_outcome && tage_useful[most_significant_table][target_idx] >0){
-          tage_useful[most_significant_table][target_idx] --;
-        }
-    } else {
-        // Allocate new entry
-        for (int i = 0; i < num_tables; i++) {
-            uint32_t idx = hash_to_index(pc, tage_ghr, history_lengths[i]);
-            if (tage_useful[i][idx] == 0) {
-                tage_tags[i][idx] = hash_to_tag(pc);
-                if (outcome == 1){
-                  tage_pred[i][idx] = 0;
-                }else{
-                  tage_pred[i][idx] = -1;
-                }
-                tage_useful[i][idx] = 1;
-                break;
-            }else{
-              tage_useful[i][idx] --;
-            }
-        }
-    }
-
-    // if (outcome == TAKEN && pc_base_predictor < 3){
-    //       pc_base_predictor ++;
-    //     }else if (outcome == NOTTAKEN && pc_base_predictor > 0){
-    //       pc_base_predictor --;
-    //     }
-
-    train_tournament(pc, outcome);
-
-
-    
-    clear_counter --;
-    if (clear_counter == 0){
-      clear_counter == 1<<18;
-      for (int i = 0; i < num_tables; i++) {
-         for (int j =0; j < table_size; j++){
-            tage_useful[i][j] = 0;
-         }
-      }
-    }
-    tage_ghr = ((tage_ghr << 1) + outcome) & ((1<<(history_bits-1))-1 + (1<<(history_bits-1)));
+  // Update history register
+  ghistory = ((ghistory << 1) | outcome);
+}
 }
 
 // Clean up memory
 void custom_clean() {
-    for (int i = 0; i < num_tables; i++) {
-        free(tage_tags[i]);
-        free(tage_pred[i]);
-        free(tage_useful[i]);
-    }
-    free(tage_tags);
-    free(tage_pred);
-    free(tage_useful);
-    cleanup_torunament();
+{
+  free(bht_gshare);
+}
 }
 
 
