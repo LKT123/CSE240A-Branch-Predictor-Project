@@ -68,8 +68,8 @@ uint8_t *choser_table;
 
 // Custom TAGE
 uint32_t num_tables = 1;
-uint32_t table_size = 6000;
-uint32_t tag_bits = 10;
+uint32_t table_size =2730;
+uint32_t tag_bits = 7;
 int32_t pred_bits = 3; // TAKEN 0 1 2 NOTTAKEN -3 -2 -1
 uint32_t useful_bits = 2;
 uint32_t history_bits = 32;
@@ -408,10 +408,10 @@ void init_custom() {
     tage_ghr = 0;
     pc_base_predictor = WT;
     clear_counter = 1<<18;
-    pclocal_PHT_bits = 16;
-    pclocal_table_bits = 9;
-    global_table_bits = 17;
-    choser_table_bits = 16;
+    pclocal_PHT_bits = 15;
+    pclocal_table_bits = 8;
+    global_table_bits = 16;
+    choser_table_bits = 15;
     init_tournament();
 
 }
