@@ -1,4 +1,6 @@
-# The Branch Predictor Project
+# The Assignment Description is as the follows:
+
+## The Branch Predictor Project
 
 ## Welcome to the project
 
